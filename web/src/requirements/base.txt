@@ -1,0 +1,38 @@
+### Required dependencies ###
+
+django~=4.2
+psycopg[binary]~=3.1
+redis~=4.5
+djangorestframework~=3.14
+drf-spectacular~=0.26
+celery~=5.2
+
+### Optional dependencies ###
+
+# AMQP for RabbitMQ
+pyamqp==0.1.0.7
+
+# Filtering
+django-filter~=23.1
+
+# Cors headers
+django-cors-headers~=3.14
+
+# Ddos defender: required redis
+django-defender~=0.9
+
+# for auth system
+dj-rest-auth~=3.0
+djangorestframework-simplejwt~=5.2
+
+# ImageField
+pillow~=9.2
+
+# Translation
+django-rosetta~=0.9
+
+# Monitoring System
+sentry-sdk~=1.18
+
+# MicroService Requests
+django-microservice-request~=0.5
