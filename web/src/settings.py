@@ -3,6 +3,7 @@ from pathlib import Path
 
 from .additional_settings.celery_settings import *
 from .additional_settings.smtp_settings import *
+from .additional_settings.summernote_settings import *
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -18,6 +19,8 @@ if DEBUG:
 AUTH_USER_MODEL = 'main.User'
 
 PROJECT_TITLE = os.environ.get('PROJECT_TITLE', 'Template')
+
+BLOG_URL = os.environ.get('BLOG_URL', '')
 
 REDIS_URL = os.environ.get('REDIS_URL', 'redis://redis:6379')
 
@@ -37,6 +40,7 @@ HEALTH_CHECK_URL = os.environ.get('HEALTH_CHECK_URL', '/application/health/')
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -51,10 +55,12 @@ THIRD_PARTY_APPS = [
     'drf_spectacular',
     'corsheaders',
     'rosetta',
+    'django_summernote',
 ]
 
 LOCAL_APPS = [
     'main.apps.MainConfig',
+    'chat.apps.ChatConfig',
 ]
 
 INSTALLED_APPS += THIRD_PARTY_APPS + LOCAL_APPS
@@ -72,6 +78,8 @@ MIDDLEWARE = [
     'defender.middleware.FailedLoginMiddleware',
     'django.middleware.locale.LocaleMiddleware',
 ]
+
+JWT_AUTH_COOKIE = 'jwt-auth'
 
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': ('rest_framework.permissions.IsAuthenticated',),
@@ -104,6 +112,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'src.wsgi.application'
 ASGI_APPLICATION = 'src.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [REDIS_URL],
+        },
+    },
+}
 
 DATABASES = {
     'default': {
@@ -159,8 +176,8 @@ LOCALE_PATHS = (os.path.join(BASE_DIR, 'locale'),)
 
 LANGUAGES = (('en', 'English'),)
 
-SESSION_COOKIE_NAME = 'sessionid'
-CSRF_COOKIE_NAME = 'csrftoken'
+SESSION_COOKIE_NAME = 'sessionid_chat'
+CSRF_COOKIE_NAME = 'csrftoken_chat'
 
 ROSETTA_SHOW_AT_ADMIN_PANEL = DEBUG
 

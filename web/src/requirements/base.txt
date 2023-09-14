@@ -36,3 +36,12 @@ sentry-sdk~=1.18
 
 # MicroService Requests
 django-microservice-request~=0.5
+
+# TextEditor
+django-summernote==0.8.20.0
+
+channels[daphne]
+
+channels_redis
+
+httpx

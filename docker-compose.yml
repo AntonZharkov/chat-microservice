@@ -10,7 +10,7 @@ services:
       - ./web/:/usr/src/web/:cached
       - postgres_socket:/postgres_socket
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       <<: *variables
     env_file:
@@ -28,7 +28,7 @@ services:
       # host.docker.internal - For docker in Windows and macOS. No other action is required.
       # If You need to connect to Postgresql in localhost, just use host.docker.internal instead of localhost
     healthcheck:
-      test: curl --fail -s http://localhost:8000$$HEALTH_CHECK_URL || exit 1
+      test: curl --fail -s http://localhost:8001$$HEALTH_CHECK_URL || exit 1
       interval: 1m30s
       timeout: 3s
       retries: 3
