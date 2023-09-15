@@ -16,6 +16,12 @@ class Chat(models.Model):
     class Meta:
         ordering = ['-created']
 
+    @classmethod
+    def choose_name(cls, queryset, auth_id: str):
+        for obj in queryset:
+            obj.name = obj.name[auth_id]
+        return queryset
+
 
 class UserChat(models.Model):
     user = models.PositiveIntegerField()
