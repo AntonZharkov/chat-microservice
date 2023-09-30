@@ -16,7 +16,7 @@ function getChatList (query='') {
       handlerChatList(data)
       // чтобы не множить количество обработчиков мы удаляем старый и привязываем новый
       $('.chats').off('click').on('click', getMessages)
-      $('#search-btn').off('click').one('click', handlerSearch)
+      $('#search').off('input').one('input', debouncedHandlerSearch)
       handlerActiveChat()
       getActiveChatMessages()
 
@@ -135,14 +135,27 @@ function handlerSearch(event) {
   getChatList(query=searchValue)
 }
 
+// обертка для вызова функции спустя заданное время
+function debounce(func, delay) {
+  let timeout;
+  return function() {
+    const context = this;
+    const args = arguments;
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(context, args), delay);
+  };
+}
+
+const debouncedHandlerSearch = debounce(handlerSearch, 1000);
+
 function handlerEndlessPagination(data) {
   const scrollTop = $('.chat-messages').scrollTop()
-  // сохраняем выосту дива для последующего расчета позиции при загрузки новой переписки
+  // сохраняем выcoту дива для последующего расчета позиции при загрузки новой переписки
   divScrollHeight = $('.chat-messages')[0].scrollHeight
   const pageNumber = data[data.indexOf('page=')+5]
   if (scrollTop <= 10) {
-    $('.chat-messages').off('scroll')
     // снимаем обработчик
+    $('.chat-messages').off('scroll')
     getMessages(event, page=pageNumber)
   }
 }
