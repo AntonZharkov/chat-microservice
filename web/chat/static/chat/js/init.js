@@ -15,12 +15,11 @@ function checkChatUserId() {
       chat_user_id: chatUserId,
     }),
     success: function(data) {
-      window.location.replace('/')
+      localStorage.setItem('user', data.user);
+      window.location.replace(`/?chat_id=${data.chat_id}`)
     },
     error: function(error) {
       console.log(error);
     }
   })
 }
-
-

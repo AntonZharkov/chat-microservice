@@ -57,6 +57,10 @@ body{
   border-radius: 50%
 }
 
+.chat-list li.disabled {
+  pointer-events: none;
+}
+
 .people-list img {
   float: left;
   border-radius: 50%
@@ -297,4 +301,14 @@ body{
 }
 .border-top {
     border-top: 1px solid #dee2e6!important;
+}
+
+.chat-messages {
+  height:300px;
+  overflow-y: scroll;
+}
+
+.chat-list {
+  height:365px;
+  overflow-y: scroll;
 }

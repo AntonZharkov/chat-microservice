@@ -1,8 +1,7 @@
-import httpx
-from rest_framework.response import Response
-from rest_framework import status
 from channels.sessions import CookieMiddleware
 from django.conf import settings
+from django.core.cache import cache
+
 class AuthTokenMiddleware:
 
     def __init__(self, app):
@@ -14,7 +13,9 @@ class AuthTokenMiddleware:
         if not token:
             return
 
-        print(token)
+        key = cache.make_key('user_info', token)
+        user_id = cache.get(key)['id']
+        scope['user_id'] = user_id
         # user_id = '' #await self.check_token(token)
         # if not user_id:
         #     return Response(

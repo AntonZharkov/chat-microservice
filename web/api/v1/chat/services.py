@@ -3,7 +3,7 @@ import json
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
-from chat.models import Chat, UserChat
+from chat.models import Chat, UserChat, Message
 from django.db.models import Q
 
 User = get_user_model()
@@ -39,10 +39,10 @@ class ChatService:
         self.user_2 = user_2
 
     def create_chat(self) -> Chat:
-        chat = Chat.objects.filter(Q(name__has_key=str(self.user_1["id"])) & Q(name__has_key=str(self.user_2["id"])))
+        chat = Chat.objects.filter(Q(name__has_key=f'id_{self.user_1["id"]}') & Q(name__has_key=f'id_{self.user_2["id"]}')).first()
 
-        if not chat.exists():
-            chat = Chat.objects.create(name={str(self.user_1["id"]): self.user_2["full_name"], str(self.user_2["id"]): self.user_1["full_name"]})
+        if not chat:
+            chat = Chat.objects.create(name={f'id_{self.user_1["id"]}': self.user_2["full_name"], f'id_{self.user_2["id"]}': self.user_1["full_name"]})
 
             userchats = [
                 UserChat(user=self.user_1["id"], chat=chat),
@@ -51,3 +51,13 @@ class ChatService:
             UserChat.objects.bulk_create(userchats)
 
         return chat
+
+class ChatQueryService:
+    @staticmethod
+    def get_chats(auth_id: int):
+        return Chat.objects.filter(user_chats__user=auth_id)
+
+    @staticmethod
+    def get_messages_for_chat(chat_id: str):
+        return Message.objects.filter(chat=chat_id)
+

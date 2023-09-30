@@ -10,6 +10,7 @@ class UserChatInline(admin.TabularInline):
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
     fields = ('name',)
+    list_display = ('id', 'name')
     inlines = [
         UserChatInline,
     ]
@@ -20,5 +21,5 @@ class MessageAdmin(admin.ModelAdmin):
     fields = ('author', 'chat', 'body', 'created', 'updated')
     summernote_fields = ('body',)
     readonly_fields = ('created', 'updated')
-    list_select_related = ('chat', 'author')
+    list_select_related = ('chat', )
     list_filter = ('chat',)
