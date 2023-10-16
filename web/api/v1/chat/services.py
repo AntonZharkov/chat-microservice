@@ -1,10 +1,9 @@
 import requests
-import json
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model
 from chat.models import Chat, UserChat, Message
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 
 User = get_user_model()
 
@@ -53,11 +52,20 @@ class ChatService:
         return chat
 
 class ChatQueryService:
+
     @staticmethod
-    def get_chats(auth_id: int):
-        return Chat.objects.filter(user_chats__user=auth_id)
+    def get_chats(user_id: int):
+        return Chat.objects.filter(user_chats__user=user_id)
+
+    def get_ids_list_chat_participants(user_id: int) -> list:
+        return list(UserChat.objects.filter(chat__user_chats__user=user_id)
+                            .exclude(user=user_id)
+                            .values_list('user', flat=True))
+
+    @staticmethod
+    def get_chats_with_user_id(user_id: int):
+        return Chat.objects.filter(user_chats__user=user_id).prefetch_related(Prefetch('user_chats', UserChat.objects.exclude(user=user_id)))
 
     @staticmethod
     def get_messages_for_chat(chat_id: str):
         return Message.objects.filter(chat=chat_id)
-

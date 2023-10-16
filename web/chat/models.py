@@ -42,7 +42,7 @@ class Message(models.Model):
     updated = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        ordering = ['created']
+        ordering = ['-created']
 
     @property
     def short_body(self):

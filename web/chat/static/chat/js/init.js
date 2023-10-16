@@ -15,8 +15,8 @@ function checkChatUserId() {
       chat_user_id: chatUserId,
     }),
     success: function(data) {
-      localStorage.setItem('user', data.user);
-      window.location.replace(`/?chat_id=${data.chat_id}`)
+      localStorage.setItem('user', JSON.stringify(data.user));
+      window.location.replace(`/?chat_id=${data.chat_id}`);
     },
     error: function(error) {
       console.log(error);

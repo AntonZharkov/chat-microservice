@@ -1,6 +1,7 @@
 from channels.sessions import CookieMiddleware
 from django.conf import settings
 from django.core.cache import cache
+from main.services import cached_result, BlogRequestService
 
 class AuthTokenMiddleware:
 
@@ -12,19 +13,10 @@ class AuthTokenMiddleware:
         token = cookies.get(settings.JWT_AUTH_COOKIE)
         if not token:
             return
+        # TODO:??? 1
+        user = cached_result('user', version=token)(BlogRequestService().verify_jwt_token)(token)
+        scope['user'] = user
 
-        key = cache.make_key('user_info', token)
-        user_id = cache.get(key)['id']
-        scope['user_id'] = user_id
-        # user_id = '' #await self.check_token(token)
-        # if not user_id:
-        #     return Response(
-        #         {'_detail': 'Unathorized user'},
-        #         status=status.HTTP_401_UNAUTHORIZED,
-        #     )
-
-
-        # scope['user_id'] = user_id
         return await self.app(scope, receive, send)
 
     async def check_token_response(self, token):

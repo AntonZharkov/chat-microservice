@@ -1,5 +1,6 @@
 from typing import Any
 
+from django.conf import settings
 from django.utils.translation import get_language_from_request
 
 
@@ -19,3 +20,7 @@ def find_dict_in_list(target: list[dict], dict_key: str | int, lookup_value: Any
 
 def get_supported_user_language(request) -> str:
     return get_language_from_request(request)
+
+
+def get_jwt_token_from_request(request) -> str:
+    return request.COOKIES[settings.JWT_AUTH_COOKIE]

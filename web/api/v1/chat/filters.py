@@ -1,12 +1,14 @@
 from django_filters import rest_framework as filters
-
+from django.conf import settings
+from main.services import cached_result, BlogRequestService, RedisCacheService
+from main.utils import get_jwt_token_from_request
 
 class ChatFilter(filters.FilterSet):
-    def __init__(self, *args, user_id=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user_id = user_id
-
     search = filters.CharFilter(method='search_filter')
 
     def search_filter(self, queryset, name, value):
-        return queryset.filter(**{f'name__id_{self.user_id}__icontains': value})
+        # TODO: !!! переделал
+        token = get_jwt_token_from_request(self.request)
+        service = RedisCacheService()
+        user = service.get_user_by_jwt(token)
+        return queryset.filter(**{f'name__id_{user["id"]}__icontains': value})
