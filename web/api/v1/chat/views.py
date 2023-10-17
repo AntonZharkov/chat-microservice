@@ -1,7 +1,7 @@
 from rest_framework.generics import GenericAPIView
-from .serializers import InitSerializer, ChatListSerializer, MessageListSerializer, InitResponseSerializer
-from .services import InitService, ChatService, ChatQueryService
-from main.services import BlogRequestService, RedisCacheService, cached_result
+from .serializers import ChatListSerializer, MessageListSerializer, InitSerializer, InitResponseSerializer
+from .services import ChatService, ChatQueryService
+from main.services import BlogRequestService, RedisCacheService
 from rest_framework.response import Response
 from django.conf import settings
 from django.core.cache import cache
@@ -19,18 +19,12 @@ class InitView(GenericAPIView):
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        # TODO: !!!
+        token = get_jwt_token_from_request(request)
 
-        token = request.COOKIES[settings.JWT_AUTH_COOKIE]
-
-        service_init = InitService(token=token, id=serializer.validated_data['chat_user_id'])
-        auth_user_info = service_init.check_token()
-        chat_user_info = service_init.check_id_chat_user()
-
-        key_auth = cache.make_key('user', token)
-        cache.set(key_auth, auth_user_info, 3600)
-
-        key_chat_user = cache.make_key('user', chat_user_info['id'])
-        cache.set(key_chat_user, chat_user_info, 3600)
+        service_cache = RedisCacheService()
+        auth_user_info = service_cache.get_user_by_jwt(token)
+        chat_user_info = service_cache.get_user_by_id(serializer.validated_data['chat_user_id'])
 
         service_chat = ChatService(auth_user_info, chat_user_info)
         chat = service_chat.create_chat()
@@ -56,25 +50,26 @@ class ChatListView(GenericAPIView):
     filterset_class = ChatFilter
 
     def get_queryset(self):
-        # TODO: !!! переделал
+        # TODO: ??? повтор ниже
         token = get_jwt_token_from_request(self.request)
-        user = cached_result('user', version=token)(BlogRequestService().verify_jwt_token)(token)
+        service = RedisCacheService()
+        user = service.get_user_by_jwt(token)
         return ChatQueryService.get_chats_with_user_id(user['id'])
 
     def get(self, request):
         queryset = self.filter_queryset(self.get_queryset())
 
-        # TODO: !!! переделал
-        service = RedisCacheService()
+        # TODO: ??? повтор выше
         token = get_jwt_token_from_request(self.request)
-        user = cached_result('user', version=token)(BlogRequestService().verify_jwt_token)(token)
+        service = RedisCacheService()
+        user = service.get_user_by_jwt(token)
         user_id = user['id']
 
         # TODO: !!!
         user_ids = ChatQueryService.get_ids_list_chat_participants(user_id)
         user_info_data = service.get_users_by_ids(user_ids)
 
-        serializer = self.get_serializer(queryset, context={'user_data': user_info_data, 'user_id': user_id}, many=True)
+        serializer = self.get_serializer(queryset, context={'user_data': user_info_data, 'user_id': user_id, 'user_ids': user_ids}, many=True)
 
         return Response(serializer.data)
 

@@ -1,7 +1,7 @@
 from channels.sessions import CookieMiddleware
 from django.conf import settings
 from django.core.cache import cache
-from main.services import cached_result, BlogRequestService
+from main.services import RedisCacheService
 
 class AuthTokenMiddleware:
 
@@ -14,7 +14,9 @@ class AuthTokenMiddleware:
         if not token:
             return
         # TODO:??? 1
-        user = cached_result('user', version=token)(BlogRequestService().verify_jwt_token)(token)
+        service = RedisCacheService()
+        user = service.get_user_by_jwt(token)
+
         scope['user'] = user
 
         return await self.app(scope, receive, send)

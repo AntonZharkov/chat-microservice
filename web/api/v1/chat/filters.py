@@ -1,6 +1,6 @@
 from django_filters import rest_framework as filters
 from django.conf import settings
-from main.services import cached_result, BlogRequestService, RedisCacheService
+from main.services import BlogRequestService, RedisCacheService
 from main.utils import get_jwt_token_from_request
 
 class ChatFilter(filters.FilterSet):

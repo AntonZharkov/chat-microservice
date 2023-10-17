@@ -68,38 +68,6 @@ class BlogRequestService:
 
         return self._handle_response(response)
 
-# TODO: ???
-def cached_result(
-    cache_key: str, timeout: int = 300, version: Union[int, str] = 1, many: bool = False
-) -> Callable[[Callable[..., RT]], Callable[..., RT]]:
-    def decorator(function: Callable[..., RT]) -> Callable[..., RT]:
-        @wraps(function)
-        def wrapper(*args: Any, **kwargs: Any) -> RT:
-            if not many:
-                key = cache.make_key(cache_key, version)
-                if key in cache:
-                    return cache.get(key)
-                result = function(*args, **kwargs)
-                cache.set(key, result, timeout=timeout)
-                print('result:', result)
-                return result
-            else:
-                result = []
-                for v in version:
-                    key = cache.make_key(cache_key, v)
-                    if key not in cache:
-                        result = function(*args, **kwargs)
-                        for user in result:
-                            key = cache.make_key(cache_key, user['id'])
-                            cache.set(key, user)
-                        return result
-                    result.append(cache.get(key))
-                return result
-
-        return wrapper
-
-    return decorator
-
 
 class RedisCacheService:
     def __init__(self) -> None:
@@ -119,8 +87,6 @@ class RedisCacheService:
             return {}
         cache.set(cache_key, user_data, timeout=self.timeout)
         return user_data
-
-        # return cached_result('user:jwt', version=token)(self.service.verify_jwt_token)(token)
 
     def get_user_by_id(self, user_id: int) -> dict:
         cache_key = self._get_key('user:id', user_id)
