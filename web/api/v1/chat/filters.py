@@ -7,7 +7,6 @@ class ChatFilter(filters.FilterSet):
     search = filters.CharFilter(method='search_filter')
 
     def search_filter(self, queryset, name, value):
-        # TODO: !!! переделал
         token = get_jwt_token_from_request(self.request)
         service = RedisCacheService()
         user = service.get_user_by_jwt(token)
