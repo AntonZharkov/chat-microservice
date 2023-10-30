@@ -7,8 +7,8 @@ from typing import Optional
 from django.core.cache import cache
 from functools import wraps
 from typing import Any, Callable, Union, TypeVar
+import datetime
 
-# TODO: ???
 RT = TypeVar('RT')
 
 
@@ -73,7 +73,7 @@ class RedisCacheService:
     def __init__(self) -> None:
         self.service = BlogRequestService()
         self.timeout = 10
-    # TODO: !!!
+
     def _get_key(self, key: str, version: int | str) -> str:
         return cache.make_key(key, version)
 
@@ -90,8 +90,8 @@ class RedisCacheService:
 
     def get_user_by_id(self, user_id: int) -> dict:
         cache_key = self._get_key('user:id', user_id)
-        # TODO: !!! использовал =:
-        if (cache_value := cache.get(cache_key)) is not None:
+
+        if cache_value := cache.get(cache_key):
             return cache_value
         response_data: list[dict] = self.service.get_users_info([user_id])
 
@@ -115,3 +115,27 @@ class RedisCacheService:
                 result.append(cache.get(cache_key))
 
         return result
+
+class RedisUserStatus:
+    def _get_key(self, user_id: int) -> str:
+        return cache.make_key('user:status', user_id)
+
+    def _get_data(self, online: bool, date=None):
+        return {
+            'online': online,
+            'date': date
+        }
+
+    def set_online(self, user_id: int):
+        key = self._get_key(user_id)
+        data = self._get_data(online=True)
+        cache.set(key, data, timeout=None)
+
+    def set_offline(self, user_id: int):
+        key = self._get_key(user_id)
+        data = self._get_data(online=False, date=datetime.datetime.now())
+        cache.set(key, data, timeout=None)
+
+    def get_status(self, user_id: int) -> dict:
+        key = self.get_key(user_id)
+        return cache.get(key)
