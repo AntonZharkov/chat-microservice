@@ -13,7 +13,7 @@ class AuthTokenMiddleware:
         token = cookies.get(settings.JWT_AUTH_COOKIE)
         if not token:
             return
-        # TODO:??? 1
+
         service = RedisCacheService()
         user = service.get_user_by_jwt(token)
 

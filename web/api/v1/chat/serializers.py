@@ -21,9 +21,7 @@ class ChatListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chat
         fields = ('id', 'name', 'user_chats')
-        prefetch_related_fields = ('user_chats', )
 
-    # TODO: !!!! переделал
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         user_id = representation.pop('user_chats')[0]['user']
@@ -44,6 +42,7 @@ class ChatListSerializer(serializers.ModelSerializer):
 
 class MessageListSerializer(serializers.ModelSerializer):
     class Meta:
+        # TODO: ??? добавить инфу о юзера с аватаром. Добавить в контекст инфу о юзерах и через to_representation изменить результат 
         model = Message
         fields = ('author', 'body', 'created')
 

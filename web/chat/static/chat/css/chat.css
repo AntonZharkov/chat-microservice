@@ -84,7 +84,7 @@ body{
 .chat .chat-header img {
   float: left;
   border-radius: 40px;
-  width: 40px
+  width: 70px
 }
 
 .chat .chat-header .chat-about {
@@ -311,4 +311,28 @@ body{
 .chat-list {
   height:365px;
   overflow-y: scroll;
+}
+
+.typing {
+  display: block;
+}
+
+@keyframes type {
+  0%, 20% {
+    content: "";
+  }
+  40%, 60% {
+    content: ".";
+  }
+  80% {
+    content: "..";
+  }
+  100% {
+    content: "...";
+  }
+}
+
+.dots::after {
+  content: "...";
+  animation: type 1.5s infinite;
 }

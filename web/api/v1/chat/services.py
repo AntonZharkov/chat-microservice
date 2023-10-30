@@ -1,5 +1,7 @@
 from chat.models import Chat, UserChat, Message
 from django.db.models import Q, Prefetch
+from main.services import RedisCacheService
+from main.utils import get_jwt_token_from_request
 
 
 class ChatService:
@@ -7,11 +9,13 @@ class ChatService:
         self.user_1 = user_1
         self.user_2 = user_2
 
-    def create_chat(self) -> Chat:
+    def create_chat(self) -> tuple[Chat, bool]:
         chat = Chat.objects.filter(Q(name__has_key=f'id_{self.user_1["id"]}') & Q(name__has_key=f'id_{self.user_2["id"]}')).first()
+        created = False
 
         if not chat:
             chat = Chat.objects.create(name={f'id_{self.user_1["id"]}': self.user_2["full_name"], f'id_{self.user_2["id"]}': self.user_1["full_name"]})
+            created = True
 
             userchats = [
                 UserChat(user=self.user_1["id"], chat=chat),
@@ -19,7 +23,7 @@ class ChatService:
             ]
             UserChat.objects.bulk_create(userchats)
 
-        return chat
+        return chat, created
 
 class ChatQueryService:
 
@@ -39,3 +43,15 @@ class ChatQueryService:
     @staticmethod
     def get_messages_for_chat(chat_id: str):
         return Message.objects.filter(chat=chat_id)
+
+
+class ChatListService:
+    # TODO: доделать
+    def __init__(self) -> None:
+        self._user = None
+        self.redis_service = RedisCacheService()
+
+    def get_user(self, request) -> dict:
+        token = get_jwt_token_from_request(request)
+        user = self.redis_service.get_user_by_jwt(token)
+        return user
