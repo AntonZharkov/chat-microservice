@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from api.v1.chat.services import ChatQueryService
 from enum import Enum
 from .models import Message
+from django.conf import settings
 
 class ReceivedData(TypedDict):
     command: str
@@ -17,7 +18,6 @@ class ActionType(Enum):
 
 class ChatConsumer(AsyncJsonWebsocketConsumer):
     async def new_message_handler(self, data: dict):
-        print('new message handler', data)
         chat_id = data['chat_id']
         data['user'] = self.user
         message: Message = await Message.objects.acreate(author=self.user['id'], chat_id=chat_id, body=data['body'])
@@ -33,10 +33,25 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
 
     async def write_message_handler(self, data: dict):
-        print('write_message_handler', data)
+        chat_id = data['chat_id']
+        await self.channel_layer.group_send(
+            chat_id,
+            {
+                'type': 'write_message_event',
+                'data': data,
+            }
+        )
+
+    async def new_chat_event(self, event: dict):
+        await self.send_json(event)
 
     async def new_message_event(self, event: dict):
-        print('new_message_event', event)
+        await self.send_json(event)
+
+    async def write_message_event(self, event: dict):
+        await self.send_json(event)
+
+    async def user_online_event(self, event: dict):
         await self.send_json(event)
 
 
@@ -51,11 +66,35 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         chats = service.get_chats(self.user['id'])
 
         if action == ActionType.ADD:
+            event_channel_name = settings.WEBSOCKET_EVENT_CHANNEL_NAME.format(user_id=self.user['id'])
+            await self.channel_layer.group_add(event_channel_name, self.channel_name)
+
             async for chat in chats:
                 await self.channel_layer.group_add(chat.id, self.channel_name)
+                await self.channel_layer.group_send(
+                            chat.id,
+                            {
+                                'type': 'user_online_event',
+                                'data': {
+                                    'user_name': self.user['full_name'],
+                                    'online': True,
+                                    'chat_id': chat.id,
+                                }
+                            }
+                )
         elif action == ActionType.DISCARD:
             async for chat in chats:
                 await self.channel_layer.group_discard(chat.id, self.channel_name)
+                await self.channel_layer.group_send(
+                            chat.id,
+                            {
+                                'type': 'user_online_event',
+                                'data': {
+                                    'online': False,
+                                    'chat_id': chat.id,
+                                }
+                            }
+                        )
 
     async def connect(self):
         self.user: dict = self.scope['user']
@@ -67,15 +106,9 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
 
     # Receive message from WebSocket
     async def receive_json(self, data: ReceivedData):
-        # self.send_json(data, close=True)
-
         command = data['command']
         handler = self.commands[command]
         await handler(self, data['data'])
-        # Send message to room group
-        # await self.channel_layer.group_send(
-        #     self.room_group_name, {"type": "chat.message", "message": message}
-        # )
 
     # Receive message from room group
     async def chat_message(self, event):

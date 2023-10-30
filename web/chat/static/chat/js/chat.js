@@ -12,9 +12,8 @@ function getChatList (query='') {
     url: `/api/v1/chat/chatlist/?search=${query}`,
     type: 'GET',
     success: function (data) {
-      console.log(data);
       const chatListHTML = data.map(chat => {
-        return generateChatList(chat);
+        return generateChatHTML(chat);
       }).join('')
       document.querySelector('.chat-list').insertAdjacentHTML('afterbegin', chatListHTML);
 
@@ -43,13 +42,14 @@ function getMessages(event, page) {
     pageNumber = page
     chatId = currentChat
   }
+  // удаляем бейджи с количеством непрочитанных сообщений
+  $(`#${chatId} span.badge`).remove();
   // снимаем обработчик
   $('.chat-messages').off('scroll')
   $.ajax({
     url: `/api/v1/chat/messages/${chatId}/?page=${pageNumber}`,
     type: 'GET',
     success: function(data) {
-
       handlerUserNameTitle()
       handlerListMessages(data.results)
 
@@ -78,7 +78,6 @@ function getActiveChatMessages() {
   const url = new URL(window.location.href)
   const params = url.searchParams
   chatId = params.get('chat_id')
-  console.log(chatId)
   if(chatId) {
     document.getElementById(chatId).click();
     window.history.replaceState({}, '', url.origin)
@@ -91,7 +90,9 @@ function formatDate(data_date) {
   const options = {
     hour: 'numeric',
     minute: 'numeric',
-    hour12: true
+    hour12: true,
+    day: 'numeric',
+    month: 'long',
   };
 
   return date.toLocaleString('en-US', options);
@@ -154,13 +155,14 @@ function handlerEndlessPagination(data) {
   const scrollTop = $('.chat-messages').scrollTop()
   // сохраняем выcoту дива для последующего расчета позиции при загрузки новой переписки
   divScrollHeight = $('.chat-messages')[0].scrollHeight
-  const pageNumber = data[data.indexOf('page=')+5]
+  const pageNumber = data.match(/page=(\d+)/)[1]
+
   if (scrollTop <= 10) {
     getMessages(event, page=pageNumber)
   }
 }
 
-function generateChatList(chat) {
+function generateChatHTML(chat) {
   return `
     <li id=${chat.id} class="clearfix chats">
       <img src="${chat.avatar}" alt="avatar">
@@ -173,19 +175,20 @@ function generateChatList(chat) {
 }
 
 function generateUserNameTitle() {
+  const status = $('.active .about .status').html()
   return `
   <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
     <img src="${activeChatUserAvatar}" alt="avatar">
   </a>
   <div class="chat-about">
     <h6 class="m-b-0">${activeChatUserName}</h6>
-    <small>Last seen: 2 hours ago</small>
+    <small>${status}</small>
   </div>
   `
 }
 
 function generateMessageList(message) {
-  user = JSON.parse(localStorage.getItem('user'));
+  const user = JSON.parse(localStorage.getItem('user'));
   if (message.author === user.id) {
     return `
     <div class="chat-message-right pb-4">

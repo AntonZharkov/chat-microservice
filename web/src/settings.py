@@ -18,6 +18,8 @@ if DEBUG:
 
 AUTH_USER_MODEL = 'main.User'
 
+WEBSOCKET_EVENT_CHANNEL_NAME = 'event_user_{user_id}'
+
 PROJECT_TITLE = os.environ.get('PROJECT_TITLE', 'Template')
 
 BLOG_URL = os.environ.get('BLOG_URL', '')
