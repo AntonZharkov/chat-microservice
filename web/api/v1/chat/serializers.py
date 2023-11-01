@@ -26,13 +26,22 @@ class ChatListSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         user_id = representation.pop('user_chats')[0]['user']
         user_info = find_dict_in_list(self.context.get('user_data'), 'id', user_id)
+
         if user_info:
-            representation['avatar'] = user_info['avatar']
-            representation['user_id'] = user_info['id']
+            # TODO: добавил аватарку и на блоге тоже в user_list.js
+            avatar_name = user_info['avatar'].split('/')[-1]
+            user_info['avatar'] = 'http://localhost:8000/media/no_ava/no_ava.png' if avatar_name == 'no-image-available.jpg' else user_info['avatar']
+            representation.update({
+                'avatar': user_info['avatar'],
+                'user_id': user_info['id'],
+            })
         else:
-            representation['name'] = 'Unknown user'
-            representation['avatar'] = 'address'
-            representation['user_id'] = user_id
+            representation.update({
+                'name': 'Unknown user',
+                'avatar': 'http://localhost:8000/media/no_ava/deleted.jpg',
+                'user_id': user_id,
+            })
+
         return representation
 
     def get_name(self, obj):
@@ -42,7 +51,7 @@ class ChatListSerializer(serializers.ModelSerializer):
 
 class MessageListSerializer(serializers.ModelSerializer):
     class Meta:
-        # TODO: ??? добавить инфу о юзера с аватаром. Добавить в контекст инфу о юзерах и через to_representation изменить результат 
+        # TODO: ??? добавить инфу о юзера с аватаром. Добавить в контекст инфу о юзерах и через to_representation изменить результат
         model = Message
         fields = ('author', 'body', 'created')
 
