@@ -3,19 +3,20 @@ const socket = new WebSocket('ws://localhost:8001/ws/chat/')
 function receiveMessage (e) {
   const data = JSON.parse(e.data)
   const command = data.type
-  
+  const user = JSON.parse(localStorage.getItem('user'))
+
   switch (command) {
     case 'new_message_event':
       newMessageEvent(data.data)
       break
     case 'write_message_event':
-      writeMessageEvent(data.data)
+      writeMessageEvent(data.data, user)
       break
     case 'new_chat_event':
       newChatEvent(data.data)
       break
     case 'user_online_event':
-      userOnlineEvent(data.data)
+      userOnlineEvent(data.data, user)
       break
   }
 }
@@ -156,9 +157,7 @@ function newMessageEvent(data) {
   }
 }
 
-function writeMessageEvent(data) {
-  user = JSON.parse(localStorage.getItem('user'))
-
+function writeMessageEvent(data, user) {
   // Проверяем, что текущий пользователь не является пользователем, который пишет
   // и проверяем на то что мы находимся в том чате, где пишет пользователь
   if (user.id !== data.author && $(`#${data.chat_id}`).hasClass('active')) {
@@ -182,8 +181,7 @@ function newChatEvent(data) {
 }
 
 // Добавление статуса онлайн/оффлайн
-function userOnlineEvent(data) {
-  const user = JSON.parse(localStorage.getItem('user'));
+function userOnlineEvent(data, user) {
   const statusElement = $(`#${data.chat_id} .status`);
   const statusNameTitle = $('.chat-about small');
 
