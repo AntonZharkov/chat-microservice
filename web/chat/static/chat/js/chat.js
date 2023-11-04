@@ -1,11 +1,18 @@
 $(function () {
   getChatList();
+  setInterval(updateTimeOffline, 60000)
 });
 
 let currentChat
 let activeChatUserName
 let activeChatUserAvatar
 let divScrollHeight
+
+// Обработчик события выбора файла
+$("#file-input, #image-input").on("change", handlerShowUploadedFile)
+
+// Обработчик события отмены загрузки
+$("#cancel-upload").on("click", handlerCancelUploadedFile)
 
 function getChatList (query='') {
   $.ajax({
@@ -119,6 +126,18 @@ function handlerActiveChat() {
   })
 }
 
+function handlerShowUploadedFile(event) {
+  const fileName = event.target.files[0].name;
+  $("#selected-file-name").text(fileName);
+  $("#cancel-upload").show();
+}
+
+function handlerCancelUploadedFile(event) {
+  $("#file-input").val("");
+  $("#selected-file-name").text("");
+  $("#cancel-upload").hide();
+}
+
 function handlerUserNameTitle() {
   const userNameTitleHTML = generateUserNameTitle()
   document.querySelector('.user-info').innerHTML = userNameTitleHTML
@@ -149,6 +168,18 @@ function debounce(func, delay) {
   };
 }
 
+function updateTimeOffline() {
+  $('.status .offline').each(function() {
+    const parentStatusElement = $(this).closest('.status');
+    const parentStatusText = parentStatusElement.text().trim();
+    const parentStatusWords = parentStatusText.split(' ');
+
+    const minutes = parseInt(parentStatusWords[1]);
+    const newMinutes = minutes + 1;
+    parentStatusElement.html(`<i class="fa fa-circle offline"></i> left ${newMinutes} mins ago`);
+  });
+}
+
 const debouncedHandlerSearch = debounce(handlerSearch, 1000);
 
 function handlerEndlessPagination(data) {
@@ -163,12 +194,23 @@ function handlerEndlessPagination(data) {
 }
 
 function generateChatHTML(chat) {
+  const online = chat.status.online
+  const onlineDate = chat.status.date
+  let howLongOfflineMin
+
+  if (onlineDate) {
+    const currentTimeInMillis = new Date().getTime(); // Текущее время в миллисекундах
+    const targetTimeInMillis = new Date(onlineDate).getTime(); // Определенная дата в миллисекундах
+    const differenceInMillis =  currentTimeInMillis - targetTimeInMillis; // Разница в миллисекундах
+    howLongOfflineMin = Math.floor(differenceInMillis / (1000 * 60)); // Разница в минутах
+  }
+  const currentTime = new Date();
   return `
     <li id=${chat.id} class="clearfix chats">
       <img src="${chat.avatar}" alt="avatar">
       <div class="about">
           <div class="name">${chat.name}</div>
-          <div class="status"> <i class="fa fa-circle offline"></i> left 7 mins ago </div>
+          <div class="status"> <i class="fa fa-circle ${online ? 'online': 'offline'}"></i> ${online ? 'Online': howLongOfflineMin >= 0 ? `left ${howLongOfflineMin} mins ago`: 'Offline'}  </div>
       </div>
     </li>
   `

@@ -31,8 +31,15 @@
 
                                 </div>
                                 <div class="col-lg-6 hidden-sm text-right">
-                                    <a href="javascript:void(0);" class="btn btn-outline-secondary"><i class="fa fa-camera"></i></a>
-                                    <a href="javascript:void(0);" class="btn btn-outline-primary"><i class="fa fa-image"></i></a>
+                                    <input type="file" id="file-input" style="display: none;" />
+                                      <label for="file-input" class="btn btn-outline-secondary">
+                                        <i class="fa fa-camera"></i>
+                                      </label>
+
+                                    <input type="file" id="image-input" accept="image/png" style="display: none;" />
+                                      <label for="image-input" class="btn btn-outline-primary">
+                                        <i class="fa fa-image"></i>
+                                      </label>
                                     <a href="javascript:void(0);" class="btn btn-outline-info"><i class="fa fa-cogs"></i></a>
                                     <a href="javascript:void(0);" class="btn btn-outline-warning"><i class="fa fa-question"></i></a>
                                 </div>
@@ -44,6 +51,8 @@
                           </div>
                         </div>
                         <div class="flex-grow-0 py-3 px-4 border-top">
+                          <span id="selected-file-name"></span>
+                          <span id="cancel-upload" style="display: none;">&#10060;</span>
                         <div class="input-group">
                             <input type="text" class="form-control" id="chat-message-input" placeholder="Type your message">
                             <button class="btn btn-primary" id="chat-message-submit">Send</button>

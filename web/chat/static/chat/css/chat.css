@@ -336,3 +336,8 @@ body{
   content: "...";
   animation: type 1.5s infinite;
 }
+
+#cancel-upload {
+  font-size: 12px;
+  cursor: pointer;
+}
