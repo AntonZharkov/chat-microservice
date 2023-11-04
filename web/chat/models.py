@@ -1,17 +1,21 @@
-from django.db import models
-from django.contrib.auth import get_user_model
 from uuid import uuid4
+
+from django.contrib.auth import get_user_model
+from django.db import models
 
 User = get_user_model()
 
+
 def hex_uuid() -> str:
     return uuid4().hex
+
 
 class Chat(models.Model):
     '''
     format of name is
     {'id_<userId>': 'chat_name', 'id_<userId>': 'chat_name'}
     '''
+
     id = models.CharField(max_length=32, primary_key=True, db_index=True, editable=False, default=hex_uuid)
     name = models.JSONField(default=dict)
     created = models.DateTimeField(auto_now_add=True)
@@ -34,10 +38,16 @@ class UserChat(models.Model):
     class Meta:
         constraints = [models.UniqueConstraint(fields=('user', 'chat'), name='unique_user_in_chat')]
 
+
+def file_message_upload_path(obj: 'Message', filename: str) -> str:
+    return f'chat/{obj.chat_id}/{filename}'
+
+
 class Message(models.Model):
     author = models.PositiveIntegerField()
     chat = models.ForeignKey(Chat, related_name='messages', on_delete=models.CASCADE)
-    body = models.TextField()
+    body = models.TextField(blank=True, default='')
+    file = models.FileField(blank=True, null=True, upload_to=file_message_upload_path)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(null=True, blank=True)
 
