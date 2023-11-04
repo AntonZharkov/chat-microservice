@@ -1,7 +1,9 @@
-from django_filters import rest_framework as filters
 from django.conf import settings
+from django_filters import rest_framework as filters
+
 from main.services import BlogRequestService, RedisCacheService
 from main.utils import get_jwt_token_from_request
+
 
 class ChatFilter(filters.FilterSet):
     search = filters.CharFilter(method='search_filter')

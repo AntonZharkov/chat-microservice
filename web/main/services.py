@@ -1,13 +1,13 @@
-import requests
-from requests.adapters import HTTPAdapter, Retry
-from django.conf import settings
-from urllib.parse import urljoin, urlencode
-from django.core.exceptions import ValidationError
-from typing import Optional
-from django.core.cache import cache
-from functools import wraps
-from typing import Any, Callable, Union, TypeVar
 import datetime
+from functools import wraps
+from typing import Any, Callable, Optional, TypeVar, Union
+from urllib.parse import urlencode, urljoin
+
+import requests
+from django.conf import settings
+from django.core.cache import cache
+from django.core.exceptions import ValidationError
+from requests.adapters import HTTPAdapter, Retry
 
 RT = TypeVar('RT')
 
@@ -26,7 +26,14 @@ class BLogAuthService:
             'Content-Type': 'application/json',
         }
 
-    def request(self, method: str, url: str, data: Optional[dict] = None, json: Optional[dict] = None, params:  Optional[str] = None):
+    def request(
+        self,
+        method: str,
+        url: str,
+        data: Optional[dict] = None,
+        json: Optional[dict] = None,
+        params: Optional[str] = None,
+    ):
         return self.session.request(method=method, url=url, data=data, json=json, headers=self.headers, params=params)
 
 
@@ -61,7 +68,7 @@ class BlogRequestService:
         return self._handle_response(response)
 
     def get_users_info(self, user_ids: list[int]) -> list[dict]:
-        params = urlencode([( 'user_id', uid ) for uid in user_ids], doseq=True)
+        params = urlencode([('user_id', uid) for uid in user_ids], doseq=True)
         url = self.get_url('/api/v1/chat/userinfo/')
         data = {'user_ids': user_ids}
         response = self.auth_service.request('get', url, json=data, params=params)
@@ -116,26 +123,41 @@ class RedisCacheService:
 
         return result
 
+
 class RedisUserStatus:
     def _get_key(self, user_id: int) -> str:
         return cache.make_key('user:status', user_id)
 
-    def _get_data(self, online: bool, date=None):
+    def _get_data(self, online: bool, user_id: int, date=None):
         return {
             'online': online,
-            'date': date
+            'date': date,
+            'id': user_id,
         }
 
     def set_online(self, user_id: int):
         key = self._get_key(user_id)
-        data = self._get_data(online=True)
+        data = self._get_data(online=True, user_id=user_id)
         cache.set(key, data, timeout=None)
 
     def set_offline(self, user_id: int):
         key = self._get_key(user_id)
-        data = self._get_data(online=False, date=datetime.datetime.now())
+        data = self._get_data(online=False, user_id=user_id, date=datetime.datetime.now())
         cache.set(key, data, timeout=None)
 
     def get_status(self, user_id: int) -> dict:
-        key = self.get_key(user_id)
+        key = self._get_key(user_id)
         return cache.get(key)
+
+    def get_status_by_ids(self, user_ids: list[int]) -> list[dict]:
+        result = []
+        for user_id in user_ids:
+            cache_key = self._get_key(user_id)
+            user_status_data = cache.get(cache_key)
+            if user_status_data:
+                result.append(cache.get(cache_key))
+            else:
+                data = self._get_data(online=False, user_id=user_id)
+                result.append(data)
+
+        return result

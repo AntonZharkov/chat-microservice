@@ -1,10 +1,11 @@
 from channels.sessions import CookieMiddleware
 from django.conf import settings
 from django.core.cache import cache
+
 from main.services import RedisCacheService
 
-class AuthTokenMiddleware:
 
+class AuthTokenMiddleware:
     def __init__(self, app):
         self.app = app
 

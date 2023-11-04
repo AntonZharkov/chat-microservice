@@ -1,11 +1,13 @@
 from django.contrib import admin
-from chat.models import Chat, Message, UserChat
 from django_summernote.admin import SummernoteModelAdmin
+
+from chat.models import Chat, Message, UserChat
 
 
 class UserChatInline(admin.TabularInline):
     model = UserChat
     readonly_fields = ('user', 'chat', 'created')
+
 
 @admin.register(Chat)
 class ChatAdmin(admin.ModelAdmin):
@@ -15,11 +17,12 @@ class ChatAdmin(admin.ModelAdmin):
         UserChatInline,
     ]
 
+
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ('author', 'chat', 'short_body')
     fields = ('author', 'chat', 'body', 'created', 'updated')
     summernote_fields = ('body',)
     readonly_fields = ('created', 'updated')
-    list_select_related = ('chat', )
+    list_select_related = ('chat',)
     list_filter = ('chat',)
