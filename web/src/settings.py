@@ -300,3 +300,22 @@ if (SENTRY_DSN := os.environ.get('SENTRY_DSN')) and ENABLE_SENTRY:
         # django.contrib.auth) you may enable sending PII data.
         send_default_pii=True,
     )
+
+AWS_PUBLIC_MEDIA_LOCATION = 'media'
+AWS_DEFAULT_ACL = 'public-read'
+AWS_DEFAULT_REGION = os.getenv('AWS_DEFAULT_REGION', 'storage')
+AWS_S3_REGION_NAME = os.getenv('AWS_S3_REGION_NAME', AWS_DEFAULT_REGION)
+AWS_STORAGE_BUCKET_NAME = os.getenv('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_ACCESS_KEY_ID = os.getenv('AWS_S3_ACCESS_KEY_ID')
+AWS_S3_SECRET_ACCESS_KEY = os.getenv('AWS_S3_SECRET_ACCESS_KEY')
+AWS_S3_ENDPOINT_URL = 'https://storage.yandexcloud.net'
+
+STORAGES = {
+    "default": {
+        "BACKEND": "main.storages.MediaStorage",
+        "OPTIONS": {},
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}

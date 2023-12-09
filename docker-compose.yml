@@ -18,6 +18,7 @@ services:
       - docker/dev/env/.db.env
       - docker/dev/env/.mailhog.env
       - docker/prod/env/.data.env
+      - docker/prod/env/.secret.env
     depends_on: [db, redis]
     restart: unless-stopped
     networks:

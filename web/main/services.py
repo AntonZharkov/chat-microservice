@@ -1,6 +1,6 @@
 import datetime
-from functools import wraps
-from typing import Any, Callable, Optional, TypeVar, Union
+from dataclasses import dataclass
+from typing import Any, Optional, TypeVar
 from urllib.parse import urlencode, urljoin
 
 import requests
@@ -10,6 +10,12 @@ from django.core.exceptions import ValidationError
 from requests.adapters import HTTPAdapter, Retry
 
 RT = TypeVar('RT')
+
+@dataclass
+class UserData:
+    id: int
+    full_name: str
+    avatar: str
 
 
 class BLogAuthService:
@@ -89,6 +95,7 @@ class RedisCacheService:
         if (cache_value := cache.get(cache_key)) is not None:
             return cache_value
         user_data: dict = self.service.verify_jwt_token(token)
+        print(user_data)
 
         if not user_data:
             return {}

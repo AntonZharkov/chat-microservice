@@ -126,14 +126,32 @@ function handlerActiveChat() {
   })
 }
 
+// отображает имя файла над полем ввода сообщения и возможность отменить
 function handlerShowUploadedFile(event) {
   const fileName = event.target.files[0].name;
+  const eventId = event.target.id
   $("#selected-file-name").text(fileName);
-  $("#cancel-upload").show();
+  const elementCancelUpload = $("#cancel-upload")
+  elementCancelUpload.show();
+  // проверяем откуда был подгружен файл и добавляем к крестику класс характеризующий откуда был прикреплен файл
+  // чтобы можно было в нужном input удалять файл
+  if (eventId === 'image-input') {
+    $("#file-input").val("");
+    elementCancelUpload.addClass('image')
+  } else if (eventId === 'file-input') {
+    $("#image-input").val("");
+    elementCancelUpload.addClass('file')
+  }
 }
 
 function handlerCancelUploadedFile(event) {
-  $("#file-input").val("");
+  const targetEvent = $(event.target)
+  // удаляем прикрпленный файл у input соотвестущего классу крестика
+  if (targetEvent.hasClass('image')) {
+    $("#image-input").val("");
+  } else if (targetEvent.hasClass('file')) {
+    $("#file-input").val("");
+  }
   $("#selected-file-name").text("");
   $("#cancel-upload").hide();
 }
@@ -219,7 +237,7 @@ function generateChatHTML(chat) {
 function generateUserNameTitle() {
   const status = $('.active .about .status').html()
   return `
-  <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
+  <a href="" data-toggle="modal" data-target="#view_info">
     <img src="${activeChatUserAvatar}" alt="avatar">
   </a>
   <div class="chat-about">
@@ -231,6 +249,12 @@ function generateUserNameTitle() {
 
 function generateMessageList(message) {
   const user = JSON.parse(localStorage.getItem('user'));
+  const fileUrl = message.file
+  const extensionFile = fileUrl ? fileUrl.split(".").pop().split("?")[0]: '';
+  const parts = fileUrl ? fileUrl.split('/'): '';
+  const fileName = parts ? parts[parts.length - 1].split('?')[0]: '';
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
   if (message.author === user.id) {
     return `
     <div class="chat-message-right pb-4">
@@ -240,7 +264,8 @@ function generateMessageList(message) {
       </div>
       <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
         <div class="font-weight-bold mb-1">${user.full_name}</div>
-        ${message.body}
+        ${fileUrl && imageExtensions.includes(extensionFile) ? `<img src="${fileUrl}" alt="${fileName}" width="100" height="100"/>` : fileUrl ? `<a href="${fileUrl}"> ${fileName}</a>`: ''}
+        <p>${message.body}</p>
       </div>
     </div>
     `
@@ -253,7 +278,8 @@ function generateMessageList(message) {
       </div>
       <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
         <div class="font-weight-bold mb-1">${activeChatUserName} </div>
-        ${message.body}
+        ${fileUrl && imageExtensions.includes(extensionFile) ? `<img src="${fileUrl}" alt="${fileName}" width="100" height="100"/>` : fileUrl ? `<a href="${fileUrl}"> ${fileName}</a>`: ''}
+        <p>${message.body}</p>
       </div>
     </div>
     `

@@ -72,7 +72,7 @@ class MessageListSerializer(serializers.ModelSerializer):
     class Meta:
         # TODO: ??? добавить инфу о юзера с аватаром. Добавить в контекст инфу о юзерах и через to_representation изменить результат
         model = Message
-        fields = ('author', 'body', 'created')
+        fields = ('author', 'body', 'created', 'file')
 
 
 class UserSerializer(serializers.Serializer):

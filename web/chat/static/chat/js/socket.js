@@ -43,15 +43,37 @@ function newMessageHandler(event) {
 
   if (chat_id && message) {
     $('#chat-message-input')[0].value = ''
-    data = JSON.stringify({
+
+    data = {
       'command': 'new_message',
       'data': {
         'chat_id': chat_id,
-        'body': message
+        'body': message,
       }
-    })
+    }
 
-    socket.send(data)
+    const cancelUploadElement = $('#cancel-upload')
+    const imageInputElement = $('#image-input')
+    const fileInputElement = $('#file-input')
+    const files = cancelUploadElement.hasClass('image') ? imageInputElement.prop('files'): cancelUploadElement.hasClass('file') ? fileInputElement.prop('files') : ''
+    if (files) {
+      const file = files[0]
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = function(e) {
+        encodedImage = e.target.result;
+        data['data']['file'] = {
+          'filename': file.name,
+          'content': encodedImage,
+          'mimetype': file.type,
+        }
+        const jsonStringData = JSON.stringify(data)
+        socket.send(jsonStringData)
+      };
+    } else {
+      const jsonStringData = JSON.stringify(data)
+      socket.send(jsonStringData)
+    }
   }
 }
 
@@ -99,6 +121,12 @@ function generateNewMessageHTML(data) {
   user = JSON.parse(localStorage.getItem('user'))
   let messageClass = 'chat-message-left'
 
+  const fileUrl = data.file
+  const extensionFile = fileUrl ? fileUrl.split(".").pop().split("?")[0]: '';
+  const parts = fileUrl ? fileUrl.split('/'): '';
+  const fileName = parts ? parts[parts.length - 1].split('?')[0]: '';
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+
   if (data.user.id === user.id) {
     messageClass = 'chat-message-right'
   }
@@ -111,7 +139,8 @@ function generateNewMessageHTML(data) {
     </div>
     <div class="flex-shrink-1 bg-light rounded py-2 px-3 mr-3">
       <div class="font-weight-bold mb-1">${data.user.full_name}</div>
-      ${data.body}
+      ${fileUrl && imageExtensions.includes(extensionFile) ? `<img src="${fileUrl}" alt="${fileName}" width="100" height="100"/>` : fileUrl ? `<a href="${fileUrl}"> ${fileName}</a>`: ''}
+      <p>${data.body}</p>
     </div>
   </div>
   `
@@ -135,6 +164,7 @@ function newMessageEvent(data) {
     // если да то добавляем новое сообщение
     const messageHTML = generateNewMessageHTML(data)
     document.querySelector('.chat-messages').insertAdjacentHTML('beforeend', messageHTML)
+    console.log(data)
   } else {
     const badgeExists = $(`#${data.chat_id}`).find('span.badge').length > 0;
 

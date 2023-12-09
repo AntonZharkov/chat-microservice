@@ -7,6 +7,7 @@ from typing import NamedTuple, TypedDict
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 from django.conf import settings
+from django.core.files.base import ContentFile
 
 from api.v1.chat.services import ChatQueryService
 
@@ -29,8 +30,13 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         chat_id = data['chat_id']
         data['user'] = self.user
         if file := data.get('file'):
-            decoded_file = b64decode(file['content'])
-        message: Message = await Message.objects.acreate(author=self.user['id'], chat_id=chat_id, body=data['body'])
+            raw_file = file['content'].split('base64,')[1]
+            decoded_file = b64decode(raw_file)
+            obj_file = ContentFile(decoded_file, file['filename'])
+            message: Message = await Message.objects.acreate(author=self.user['id'], chat_id=chat_id, body=data['body'], file=obj_file)
+            data['file'] = message.file.url
+        else:
+            message: Message = await Message.objects.acreate(author=self.user['id'], chat_id=chat_id, body=data['body'])
         data['created'] = str(message.created)
 
         await self.channel_layer.group_send(

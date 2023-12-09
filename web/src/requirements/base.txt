@@ -40,8 +40,15 @@ django-microservice-request~=0.5
 # TextEditor
 django-summernote==0.8.20.0
 
+# WebSocket
 channels[daphne]
 
 channels_redis
 
 httpx
+
+# YandexCloud
+django-storages[s3]~=1.14
+
+# Mocking
+pytest-mock~=3.12
