@@ -9,4 +9,11 @@ python_files = "*test*.py"
 python_classes = "*Test*"
 DJANGO_SETTINGS_MODULE = "src.settings_prod"
 log_cli = "true"
-log_cli_level = "info"
+log_cli_level = "inf
+
+[tool.mypy]
+python_version = "3.10
+cache_dir = ".cache/mypy"
+exclude = [
+  "tests"
+]
